@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI RFQ Processor</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            AI RFQ Processor
+        </div>
+
+        <a href="/" class="nav-item">
+            Dashboard
+        </a>
+
+        <a href="#" class="nav-item">
+            RFQs
+        </a>
+
+        <a href="#" class="nav-item">
+            Settings
+        </a>
+
+    </aside>
+
+
+    <main class="main">
+
+        <div class="header">
+
+            <div>
+
+                <h1>Dashboard</h1>
+
+                <p class="subtitle">
+                    Manage and process your quotation requests.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="upload-box">
+
+            <h2>Upload an RFQ</h2>
+
+            <p>
+                Upload a PDF, image or document and let AI extract the details.
+            </p>
+
+            <form action="/upload" method="post" enctype="multipart/form-data">
+
+                <input type="file" name="file" required>
+
+                <button type="submit" class="upload-button">
+                    Process RFQ
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <section class="section">
+
+            <div class="section-header">
+
+                <h2>Recent RFQs</h2>
+
+                <form method="get" action="/">
+
+                    <input
+                        type="text"
+                        name="search"
+                        placeholder="Search company or product..."
+                        value="{{ search }}"
+                    >
+
+                    <select name="status">
+
+                        <option value="">All Statuses</option>
+
+                        <option value="NEW" {% if status == "NEW" %}selected{% endif %}>
+                            NEW
+                        </option>
+
+                        <option value="QUOTING" {% if status == "QUOTING" %}selected{% endif %}>
+                            QUOTING
+                        </option>
+
+                        <option value="QUOTED" {% if status == "QUOTED" %}selected{% endif %}>
+                            QUOTED
+                        </option>
+
+                        <option value="WON" {% if status == "WON" %}selected{% endif %}>
+                            WON
+                        </option>
+
+                        <option value="LOST" {% if status == "LOST" %}selected{% endif %}>
+                            LOST
+                        </option>
+
+                    </select>
+
+                    <button type="submit" class="upload-button">
+                        Search
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            {% if rfqs %}
+
+            <table class="rfq-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Company</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Delivery Date</th>
+                        <th>Location</th>
+                        <th>Status</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for rfq in rfqs %}
+
+                    <tr>
+
+                        <td>
+
+                            <a href="/rfq/{{ rfq['id'] }}" class="rfq-link">
+                                {{ rfq["company"] }}
+                            </a>
+
+                        </td>
+
+                        <td>
+                            {{ rfq["product"] }}
+                        </td>
+
+                        <td>
+                            {{ rfq["quantity"] }}
+                        </td>
+
+                        <td>
+                            {{ rfq["delivery_date"] }}
+                        </td>
+
+                        <td>
+                            {{ rfq["delivery_location"] }}
+                        </td>
+
+                        <td>
+                            <span class="status">{{ rfq["status"] }}</span>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% else %}
+
+            <p>No RFQs have been processed yet.</p>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

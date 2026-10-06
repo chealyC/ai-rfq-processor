@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>RFQ Details</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            AI RFQ Processor
+        </div>
+
+        <a href="/" class="nav-item">
+            Dashboard
+        </a>
+
+        <a href="#" class="nav-item">
+            RFQs
+        </a>
+
+        <a href="#" class="nav-item">
+            Settings
+        </a>
+
+    </aside>
+
+
+    <main class="main">
+
+        <div class="header">
+
+            <div>
+
+                <h1>RFQ Details</h1>
+
+                <p class="subtitle">
+                    View the information extracted from this quotation request.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <section class="section">
+
+            <h2>{{ rfq["company"] }}</h2>
+
+            <br>
+
+            <p><strong>Product:</strong> {{ rfq["product"] }}</p>
+
+            <p><strong>Quantity:</strong> {{ rfq["quantity"] }}</p>
+
+            <p><strong>Delivery Date:</strong> {{ rfq["delivery_date"] }}</p>
+
+            <p><strong>Delivery Location:</strong> {{ rfq["delivery_location"] }}</p>
+
+            <br>
+
+            <h3>Requirements</h3>
+
+            <p>
+                {{ rfq["requirements"] }}
+            </p>
+
+            <br>
+
+            <a href="/">
+                ← Back to Dashboard
+            </a>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

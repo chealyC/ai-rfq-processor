@@ -1,0 +1,172 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>RFQ Details</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            AI RFQ Processor
+        </div>
+
+        <a href="/" class="nav-item">
+            Dashboard
+        </a>
+
+        <a href="#" class="nav-item">
+            RFQs
+        </a>
+
+        <a href="#" class="nav-item">
+            Settings
+        </a>
+
+    </aside>
+
+
+    <main class="main">
+
+        <div class="header">
+
+            <div>
+
+                <h1>RFQ Details</h1>
+
+                <p class="subtitle">
+                    {{ rfq["company"] }}
+                </p>
+
+            </div>
+
+
+            <form action="/rfq/{{ rfq['id'] }}/status" method="post">
+
+                <select name="status" onchange="this.form.submit()">
+
+                    <option value="NEW" {% if rfq["status"] == "NEW" %}selected{% endif %}>
+                        NEW
+                    </option>
+
+                    <option value="QUOTING" {% if rfq["status"] == "QUOTING" %}selected{% endif %}>
+                        QUOTING
+                    </option>
+
+                    <option value="QUOTED" {% if rfq["status"] == "QUOTED" %}selected{% endif %}>
+                        QUOTED
+                    </option>
+
+                    <option value="WON" {% if rfq["status"] == "WON" %}selected{% endif %}>
+                        WON
+                    </option>
+
+                    <option value="LOST" {% if rfq["status"] == "LOST" %}selected{% endif %}>
+                        LOST
+                    </option>
+
+                </select>
+
+            </form>
+
+        </div>
+
+
+        <section class="rfq-details">
+
+            <div class="detail-card">
+
+                <h3>Company</h3>
+
+                <p>
+                    {{ rfq["company"] }}
+                </p>
+
+            </div>
+
+
+            <div class="detail-card">
+
+                <h3>Product</h3>
+
+                <p>
+                    {{ rfq["product"] }}
+                </p>
+
+            </div>
+
+
+            <div class="detail-card">
+
+                <h3>Quantity</h3>
+
+                <p>
+                    {{ rfq["quantity"] }}
+                </p>
+
+            </div>
+
+
+            <div class="detail-card">
+
+                <h3>Delivery Date</h3>
+
+                <p>
+                    {{ rfq["delivery_date"] }}
+                </p>
+
+            </div>
+
+
+            <div class="detail-card">
+
+                <h3>Delivery Location</h3>
+
+                <p>
+                    {{ rfq["delivery_location"] }}
+                </p>
+
+            </div>
+
+
+            <div class="detail-card requirements-card">
+
+                <h3>Requirements</h3>
+
+                <ul class="requirements-list">
+
+                    {% for requirement in rfq["requirements"].split(", ") %}
+
+                    <li>
+                        {{ requirement }}
+                    </li>
+
+                    {% endfor %}
+
+                </ul>
+
+            </div>
+
+        </section>
+
+
+        <a href="/" class="back-button">
+            ← Back to Dashboard
+        </a>
+
+    </main>
+
+</body>
+
+</html>
+```
