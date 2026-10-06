@@ -2,10 +2,11 @@ from ocr_reader import extract_text_from_image
 from pdf_reader import extract_text_from_pdf
 from ai_processor import process_rfq
 from fastapi import FastAPI, Request, UploadFile, File, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
-from database import get_rfqs, save_rfq, update_rfq_status
+from database import get_rfqs, save_rfq, update_rfq_status, get_rfq_stats, create_quote
 from fastapi.staticfiles import StaticFiles
+from quote_pdf import generate_quote_pdf
 
 app = FastAPI()
 
@@ -17,6 +18,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def home(request: Request, status: str = "", search: str = ""):
 
     rfqs = get_rfqs()
+    stats = get_rfq_stats()
 
     if status:
         rfqs = [
@@ -39,7 +41,8 @@ def home(request: Request, status: str = "", search: str = ""):
         context={
             "rfqs": rfqs,
             "status": status,
-            "search": search
+            "search": search,
+            "stats": stats
         }
     )
 
@@ -99,3 +102,52 @@ async def change_rfq_status(rfq_id: int, status: str = Form(...)):
         f"/rfq/{rfq_id}",
         status_code=303
     )
+
+@app.post("/rfq/{rfq_id}/quote")
+async def make_quote(
+    rfq_id: int,
+    unit_price: float = Form(...)
+):
+
+    rfqs = get_rfqs()
+
+    for rfq in rfqs:
+
+        if rfq["id"] == rfq_id:
+
+            total_price = unit_price * rfq["quantity"]
+
+            create_quote(
+                rfq_id,
+                unit_price,
+                total_price
+            )
+
+            return RedirectResponse(
+                f"/rfq/{rfq_id}",
+                status_code=303
+            )
+
+    return {"error": "RFQ not found"}
+
+@app.get("/rfq/{rfq_id}/quote/pdf")
+def download_quote_pdf(rfq_id: int):
+
+    rfqs = get_rfqs()
+
+    for rfq in rfqs:
+
+        if rfq["id"] == rfq_id:
+
+            if rfq["total_price"] is None:
+                return {"error": "Quote has not been created"}
+
+            filename = generate_quote_pdf(rfq)
+
+            return FileResponse(
+                filename,
+                media_type="application/pdf",
+                filename=filename
+            )
+
+    return {"error": "RFQ not found"}

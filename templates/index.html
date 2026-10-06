@@ -72,6 +72,34 @@
 
         </div>
 
+        <div class="stats">
+
+            <div class="stat-card">
+                <h3>Total RFQs</h3>
+                <p>{{ stats["TOTAL"] }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>New</h3>
+                <p>{{ stats["NEW"] }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Quoting</h3>
+                <p>{{ stats["QUOTING"] }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Quoted</h3>
+                <p>{{ stats["QUOTED"] }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Won</h3>
+                <p>{{ stats["WON"] }}</p>
+            </div>
+
+        </div>
 
         <section class="section">
 
@@ -136,6 +164,7 @@
                         <th>Quantity</th>
                         <th>Delivery Date</th>
                         <th>Location</th>
+                        <th>Total Quote</th>
                         <th>Status</th>
 
                     </tr>
@@ -171,6 +200,14 @@
 
                         <td>
                             {{ rfq["delivery_location"] }}
+                        </td>
+                        
+                        <td>
+                            {% if rfq["total_price"] is not none %}
+                                £{{ "%.2f"|format(rfq["total_price"]) }}
+                            {% else %}
+                                —
+                            {% endif %}
                         </td>
 
                         <td>

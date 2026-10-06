@@ -22,7 +22,9 @@ cursor.execute("""
         delivery_date TEXT,
         delivery_location TEXT,
         requirements TEXT
-        status TEXT DEFAULT 'NEW'
+        status TEXT DEFAULT 'NEW',
+        unit_price REAL,
+        total_price REAL    
     )
 """)
 
@@ -83,6 +85,50 @@ def update_rfq_status(rfq_id, status):
         SET status = ?
         WHERE id = ?
     """, (status, rfq_id))
+
+    connection.commit()
+    connection.close()
+
+def get_rfq_stats():
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT status, COUNT(*) as count
+        FROM rfqs
+        GROUP BY status
+    """)
+
+    results = cursor.fetchall()
+
+    connection.close()
+
+    stats = {
+        "NEW": 0,
+        "QUOTING": 0,
+        "QUOTED": 0,
+        "WON": 0,
+        "LOST": 0
+    }
+
+    for row in results:
+        stats[row["status"]] = row["count"]
+
+    stats["TOTAL"] = sum(stats.values())
+
+    return stats
+
+def create_quote(rfq_id, unit_price, total_price):
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE rfqs
+        SET unit_price = ?, total_price = ?, status = 'QUOTED'
+        WHERE id = ?
+    """, (unit_price, total_price, rfq_id))
 
     connection.commit()
     connection.close()
