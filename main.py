@@ -19,6 +19,7 @@ from ocr_reader import extract_text_from_image, extract_text_from_scanned_pdf
 from ai_processor import process_rfq
 
 import os
+import uuid
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -74,26 +75,38 @@ async def upload_rfq(
             url="/login",
             status_code=303
         )
+    MAX_FILE_SIZE = 10 * 1024 * 1024
 
-    filename = file.filename
+    file_content = await file.read()
+
+    if len(file_content) > MAX_FILE_SIZE:
+        return {"error": "File is too large. Maximum size is 10 MB."}
+
+    original_filename = file.filename
+
+    extension = os.path.splitext(original_filename)[1]
+
+    filename = f"{uuid.uuid4()}{extension}"
 
     os.makedirs("uploads", exist_ok=True)
 
     filepath = os.path.join("uploads", filename)
 
     with open(filepath, "wb") as f:
-        f.write(await file.read())
+        f.write(file_content)
 
     try:
 
-        if filename.lower().endswith(".pdf"):
+        extension = extension.lower()
+
+        if extension == ".pdf":
 
             rfq_text = extract_text_from_pdf(filepath)
 
             if not rfq_text.strip():
                 rfq_text = extract_text_from_scanned_pdf(filepath)
 
-        elif filename.lower().endswith((".png", ".jpg", ".jpeg")):
+        elif extension in (".png", ".jpg", ".jpeg"):
 
             rfq_text = extract_text_from_image(filepath)
 
@@ -115,6 +128,11 @@ async def upload_rfq(
         return {
             "error": str(e)
         }
+
+    finally:
+
+        if os.path.exists(filepath):
+            os.remove(filepath)
 
 @app.get("/rfq/{rfq_id}")
 async def rfq_details(request: Request, rfq_id: int):
