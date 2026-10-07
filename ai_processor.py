@@ -23,6 +23,7 @@ Use exactly these fields:
 
 {{
     "company": "",
+    "email": "",
     "product": "",
     "quantity": 0,
     "delivery_date": "",

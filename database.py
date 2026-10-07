@@ -17,6 +17,7 @@ cursor.execute("""
     CREATE TABLE IF NOT EXISTS rfqs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         company TEXT,
+        email TEXT,
         product TEXT,
         quantity INTEGER,
         delivery_date TEXT,
@@ -27,6 +28,11 @@ cursor.execute("""
         total_price REAL    
     )
 """)
+
+try:
+    cursor.execute("ALTER TABLE rfqs ADD COLUMN email TEXT")
+except sqlite3.OperationalError:
+    pass
 
 connection.commit()
 connection.close()
@@ -40,6 +46,7 @@ def save_rfq(rfq):
     cursor.execute("""
     INSERT INTO rfqs (
         company,
+        email,
         product,
         quantity,
         delivery_date,
@@ -47,9 +54,10 @@ def save_rfq(rfq):
         requirements,
         status
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 """, (
     rfq["company"],
+    rfq["email"],
     rfq["product"],
     rfq["quantity"],
     rfq["delivery_date"],
