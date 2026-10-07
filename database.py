@@ -21,7 +21,7 @@ cursor.execute("""
         quantity INTEGER,
         delivery_date TEXT,
         delivery_location TEXT,
-        requirements TEXT
+        requirements TEXT,
         status TEXT DEFAULT 'NEW',
         unit_price REAL,
         total_price REAL    
@@ -129,6 +129,54 @@ def create_quote(rfq_id, unit_price, total_price):
         SET unit_price = ?, total_price = ?, status = 'QUOTED'
         WHERE id = ?
     """, (unit_price, total_price, rfq_id))
+
+    connection.commit()
+    connection.close()
+
+def search_rfqs(search="", status=""):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    query = "SELECT * FROM rfqs WHERE 1=1"
+    parameters = []
+
+    if search:
+        query += """
+            AND (
+                company LIKE ?
+                OR product LIKE ?
+            )
+        """
+
+        search_term = f"%{search}%"
+
+        parameters.extend([
+            search_term,
+            search_term
+        ])
+
+    if status:
+        query += " AND status = ?"
+        parameters.append(status)
+
+    query += " ORDER BY id DESC"
+
+    cursor.execute(query, parameters)
+
+    rfqs = cursor.fetchall()
+
+    connection.close()
+
+    return rfqs
+
+def delete_rfq(rfq_id):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        DELETE FROM rfqs
+        WHERE id = ?
+    """, (rfq_id,))
 
     connection.commit()
     connection.close()

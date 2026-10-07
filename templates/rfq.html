@@ -33,6 +33,10 @@
             Settings
         </a>
 
+        <a href="/logout" class="nav-item">
+            Logout
+        </a>
+
     </aside>
 
 
@@ -231,6 +235,16 @@
         <a href="/" class="back-button">
             ← Back to Dashboard
         </a>
+
+        <form
+            action="/rfq/{{ rfq['id'] }}/delete"
+            method="post"
+            onsubmit="return confirm('Are you sure you want to delete this RFQ?');"
+        >
+            <button type="submit" class="delete-button">
+                Delete RFQ
+            </button>
+        </form>
 
     </main>
 

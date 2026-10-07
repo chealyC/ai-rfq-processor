@@ -1,95 +1,307 @@
-from database import save_rfq, get_rfqs
+from fastapi import FastAPI, Request, UploadFile, File, Form
+from starlette.middleware.sessions import SessionMiddleware
+from fastapi.responses import RedirectResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from quote_pdf import generate_quote_pdf
+
+from database import (
+    get_rfqs,
+    get_rfq_stats,
+    save_rfq,
+    update_rfq_status,
+    create_quote,
+    search_rfqs,
+    delete_rfq
+)
 from pdf_reader import extract_text_from_pdf
 from ocr_reader import extract_text_from_image, extract_text_from_scanned_pdf
 from ai_processor import process_rfq
 
-while True:
-    print("\n===== RFQ PROCESSOR =====")
-    print("1. Process new RFQ")
-    print("2. View saved RFQs")
-    print("3. Exit")
+import os
+from dotenv import load_dotenv
 
-    choice = input("\nChoose an option: ")
+load_dotenv()
 
-    if choice == '1':
-        filename = input("Enter RFQ filename: ")
+app = FastAPI()
 
-        try:
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SECRET_KEY")
+)
 
-            if filename.lower().endswith(".pdf"):
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-                rfq_text = extract_text_from_pdf(filename)
+templates = Jinja2Templates(directory="templates")
 
-                # If PDF contains no selectable text,
-                # try OCR instead.
-                if not rfq_text.strip():
-                    print("No text found. Running OCR...")
-                    rfq_text = extract_text_from_scanned_pdf(filename)
 
-            elif filename.lower().endswith((".png", ".jpg", ".jpeg")):
+@app.get("/")
+async def home(
+    request: Request,
+    search: str = "",
+    status: str = ""
+):
 
-                print("Running OCR...")
-                rfq_text = extract_text_from_image(filename)
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
 
-            else:
+    rfqs = search_rfqs(search, status)
+    stats = get_rfq_stats()
 
-                print("Unsupported file type.")
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "stats": stats,
+            "rfqs": rfqs,
+            "search": search,
+            "status": status
+        }
+    )
 
-            rfq = process_rfq(rfq_text)
 
-            save_rfq(rfq)
+@app.post("/upload")
+async def upload_rfq(
+    request: Request,
+    file: UploadFile = File(...)
+):
 
-            print("\nRFQ ANALYSIS")
-            print("-" * 30)
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
 
-            print(f"Company: {rfq['company']}")
-            print(f"Product: {rfq['product']}")
-            print(f"Quantity: {rfq['quantity']}")
-            print(f"Delivery date: {rfq['delivery_date']}")
-            print(f"Delivery location: {rfq['delivery_location']}")
+    filename = file.filename
 
-            print("\nRequirements:")
+    os.makedirs("uploads", exist_ok=True)
 
-            for requirement in rfq["requirements"]:
-                print(f"- {requirement}")
+    filepath = os.path.join("uploads", filename)
 
-        except FileNotFoundError:
-            print("Error: File not found.")
+    with open(filepath, "wb") as f:
+        f.write(await file.read())
 
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+    try:
 
-    elif choice == "2":
-        rfqs = get_rfqs()
+        if filename.lower().endswith(".pdf"):
 
-        print("\nSaved RFQs:")
+            rfq_text = extract_text_from_pdf(filepath)
 
-        for i, rfq in enumerate(rfqs, start=1):
-            print(f"{i}. {rfq['company']}")
+            if not rfq_text.strip():
+                rfq_text = extract_text_from_scanned_pdf(filepath)
 
-        choice = int(input("Enter RFQ number: "))
+        elif filename.lower().endswith((".png", ".jpg", ".jpeg")):
 
-        rfq = rfqs[choice - 1]
+            rfq_text = extract_text_from_image(filepath)
 
-        print("\nRFQ DETAILS")
-        print("-" * 30)
+        else:
 
-        print(f"Company: {rfq['company']}")
-        print(f"Product: {rfq['product']}")
-        print(f"Quantity: {rfq['quantity']}")
-        print(f"Delivery date: {rfq['delivery_date']}")
-        print(f"Delivery location: {rfq['delivery_location']}")
+            return {"error": "Unsupported file type."}
 
-        print("\nRequirements:")
+        rfq = process_rfq(rfq_text)
 
-        requirements = rfq["requirements"].split(", ")
+        save_rfq(rfq)
 
-        for requirement in requirements:
-            print(f"- {requirement}")
+        return RedirectResponse(
+            url="/",
+            status_code=303
+        )
 
-        print("-" * 30)
-            
-    elif choice == '3':
-        print("Goodbye!")
-        break
+    except Exception as e:
 
+        return {
+            "error": str(e)
+        }
+
+@app.get("/rfq/{rfq_id}")
+async def rfq_details(request: Request, rfq_id: int):
+
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
+    
+    rfqs = get_rfqs()
+
+    rfq = None
+
+    for item in rfqs:
+        if item["id"] == rfq_id:
+            rfq = item
+            break
+
+    if rfq is None:
+        return {"error": "RFQ not found"}
+
+    return templates.TemplateResponse(
+        request=request,
+        name="rfq.html",
+        context={
+            "rfq": rfq
+        }
+    )
+
+@app.post("/rfq/{rfq_id}/status")
+async def change_status(
+    request: Request,
+    rfq_id: int,
+    status: str = Form(...)
+):
+
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
+
+    update_rfq_status(rfq_id, status)
+
+    return RedirectResponse(
+        url=f"/rfq/{rfq_id}",
+        status_code=303
+    )
+
+@app.post("/rfq/{rfq_id}/quote")
+async def create_rfq_quote(
+    request: Request,
+    rfq_id: int,
+    unit_price: float = Form(...)
+):
+
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
+
+    rfqs = get_rfqs()
+
+    rfq = None
+
+    for item in rfqs:
+        if item["id"] == rfq_id:
+            rfq = item
+            break
+
+    if rfq is None:
+        return {"error": "RFQ not found"}
+
+    total_price = rfq["quantity"] * unit_price
+
+    create_quote(
+        rfq_id,
+        unit_price,
+        total_price
+    )
+
+    return RedirectResponse(
+        url=f"/rfq/{rfq_id}",
+        status_code=303
+    )
+
+@app.get("/rfq/{rfq_id}/quote/pdf")
+async def download_quote_pdf(
+    request: Request,
+    rfq_id: int
+):
+
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
+
+    rfqs = get_rfqs()
+
+    rfq = None
+
+    for item in rfqs:
+        if item["id"] == rfq_id:
+            rfq = item
+            break
+
+    if rfq is None:
+        return {"error": "RFQ not found"}
+
+    if rfq["unit_price"] is None:
+        return {"error": "No quote has been created yet"}
+
+    filename = generate_quote_pdf(rfq)
+
+    return FileResponse(
+        path=filename,
+        filename=filename,
+        media_type="application/pdf"
+    )
+
+@app.post("/rfq/{rfq_id}/delete")
+async def delete_rfq_route(
+    request: Request,
+    rfq_id: int
+):
+
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
+
+    delete_rfq(rfq_id)
+
+    return RedirectResponse(
+        url="/",
+        status_code=303
+    )
+
+@app.get("/login")
+async def login_page(request: Request):
+
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+        context={
+            "error": None
+        }
+    )
+
+
+@app.post("/login")
+async def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...)
+):
+
+    if (
+    username == os.getenv("APP_USERNAME")
+    and password == os.getenv("APP_PASSWORD")
+):
+
+        request.session["logged_in"] = True
+
+        return RedirectResponse(
+            url="/",
+            status_code=303
+        )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+        context={
+            "error": "Invalid username or password."
+        }
+    )
+
+@app.get("/logout")
+async def logout(request: Request):
+
+    request.session.clear()
+
+    return RedirectResponse(
+        url="/login",
+        status_code=303
+    )
