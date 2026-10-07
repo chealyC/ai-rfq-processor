@@ -25,12 +25,18 @@ cursor.execute("""
         requirements TEXT,
         status TEXT DEFAULT 'NEW',
         unit_price REAL,
-        total_price REAL    
+        total_price REAL,
+        email_draft TEXT    
     )
 """)
 
 try:
     cursor.execute("ALTER TABLE rfqs ADD COLUMN email TEXT")
+except sqlite3.OperationalError:
+    pass
+
+try:
+    cursor.execute("ALTER TABLE rfqs ADD COLUMN email_draft TEXT")
 except sqlite3.OperationalError:
     pass
 
@@ -185,6 +191,19 @@ def delete_rfq(rfq_id):
         DELETE FROM rfqs
         WHERE id = ?
     """, (rfq_id,))
+
+    connection.commit()
+    connection.close()
+
+def save_email_draft(rfq_id, email_draft):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE rfqs
+        SET email_draft = ?
+        WHERE id = ?
+    """, (email_draft, rfq_id))
 
     connection.commit()
     connection.close()

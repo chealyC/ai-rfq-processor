@@ -4,6 +4,8 @@ from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from quote_pdf import generate_quote_pdf
+from ai_processor import process_rfq
+from email_generator import generate_customer_email
 
 from database import (
     get_rfqs,
@@ -12,7 +14,8 @@ from database import (
     update_rfq_status,
     create_quote,
     search_rfqs,
-    delete_rfq
+    delete_rfq,
+    save_email_draft
 )
 from pdf_reader import extract_text_from_pdf
 from ocr_reader import extract_text_from_image, extract_text_from_scanned_pdf
@@ -155,11 +158,14 @@ async def rfq_details(request: Request, rfq_id: int):
     if rfq is None:
         return {"error": "RFQ not found"}
 
+    generated_email = request.session.pop("generated_email", None)
+
     return templates.TemplateResponse(
         request=request,
         name="rfq.html",
         context={
-            "rfq": rfq
+            "rfq": rfq,
+            "generated_email": generated_email
         }
     )
 
@@ -214,6 +220,65 @@ async def create_rfq_quote(
         rfq_id,
         unit_price,
         total_price
+    )
+
+    return RedirectResponse(
+        url=f"/rfq/{rfq_id}",
+        status_code=303
+    )
+
+@app.post("/rfq/{rfq_id}/email")
+async def generate_rfq_email(
+    request: Request,
+    rfq_id: int
+):
+
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
+
+    rfqs = get_rfqs()
+
+    rfq = None
+
+    for item in rfqs:
+        if item["id"] == rfq_id:
+            rfq = item
+            break
+
+    if rfq is None:
+        return {"error": "RFQ not found"}
+
+    if rfq["unit_price"] is None:
+        return {"error": "Create a quote before generating an email."}
+
+    email = generate_customer_email(dict(rfq))
+
+    request.session["generated_email"] = email
+
+    return RedirectResponse(
+        url=f"/rfq/{rfq_id}",
+        status_code=303
+    )
+
+@app.post("/rfq/{rfq_id}/email/save")
+async def save_rfq_email(
+    request: Request,
+    rfq_id: int,
+    email_draft: str = Form(...)
+):
+
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
+
+    save_email_draft(
+        rfq_id,
+        email_draft
     )
 
     return RedirectResponse(
@@ -323,3 +388,40 @@ async def logout(request: Request):
         url="/login",
         status_code=303
     )
+
+@app.post("/rfq/{rfq_id}/email/send")
+async def send_rfq_email(
+    request: Request,
+    rfq_id: int
+):
+
+    if not request.session.get("logged_in"):
+        return RedirectResponse(
+            url="/login",
+            status_code=303
+        )
+
+    rfqs = get_rfqs()
+
+    rfq = None
+
+    for item in rfqs:
+        if item["id"] == rfq_id:
+            rfq = item
+            break
+
+    if rfq is None:
+        return {"error": "RFQ not found"}
+
+    if not rfq["email"]:
+        return {"error": "Customer email address is missing."}
+
+    if not rfq["email_draft"]:
+        return {"error": "No saved email draft exists."}
+
+    # Email sending will be added here later.
+
+    return {
+        "message": "Email ready to be sent.",
+        "recipient": rfq["email"]
+    }

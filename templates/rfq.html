@@ -1,267 +1,417 @@
-```html
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+```
+<meta charset="UTF-8">
 
-    <title>RFQ Details</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="/static/style.css">
+<title>RFQ Details</title>
+
+<link rel="stylesheet" href="/static/style.css">
+```
 
 </head>
 
 <body>
 
-    <aside class="sidebar">
+```
+<aside class="sidebar">
 
-        <div class="logo">
-            AI RFQ Processor
-        </div>
+    <div class="logo">
+        AI RFQ Processor
+    </div>
 
-        <a href="/" class="nav-item">
-            Dashboard
-        </a>
+    <a href="/" class="nav-item">
+        Dashboard
+    </a>
 
-        <a href="#" class="nav-item">
-            RFQs
-        </a>
+    <a href="#" class="nav-item">
+        RFQs
+    </a>
 
-        <a href="#" class="nav-item">
-            Settings
-        </a>
+    <a href="#" class="nav-item">
+        Settings
+    </a>
 
-        <a href="/logout" class="nav-item">
-            Logout
-        </a>
+    <a href="/logout" class="nav-item">
+        Logout
+    </a>
 
-    </aside>
-
-
-    <main class="main">
-
-        <div class="header">
-
-            <div>
-
-                <h1>RFQ Details</h1>
-
-                <p class="subtitle">
-                    {{ rfq["company"] }}
-                </p>
-
-            </div>
+</aside>
 
 
-            <form action="/rfq/{{ rfq['id'] }}/status" method="post">
+<main class="main">
 
-                <select name="status" onchange="this.form.submit()">
+    <div class="header">
 
-                    <option value="NEW" {% if rfq["status"] == "NEW" %}selected{% endif %}>
-                        NEW
-                    </option>
+        <div>
 
-                    <option value="QUOTING" {% if rfq["status"] == "QUOTING" %}selected{% endif %}>
-                        QUOTING
-                    </option>
+            <h1>RFQ Details</h1>
 
-                    <option value="QUOTED" {% if rfq["status"] == "QUOTED" %}selected{% endif %}>
-                        QUOTED
-                    </option>
-
-                    <option value="WON" {% if rfq["status"] == "WON" %}selected{% endif %}>
-                        WON
-                    </option>
-
-                    <option value="LOST" {% if rfq["status"] == "LOST" %}selected{% endif %}>
-                        LOST
-                    </option>
-
-                </select>
-
-            </form>
+            <p class="subtitle">
+                {{ rfq["company"] }}
+            </p>
 
         </div>
 
 
-        <section class="rfq-details">
+        <form
+            action="/rfq/{{ rfq['id'] }}/status"
+            method="post"
+        >
 
-            <div class="detail-card">
+            <select
+                name="status"
+                onchange="this.form.submit()"
+            >
 
-                <h3>Company</h3>
+                <option
+                    value="NEW"
+                    {% if rfq["status"] == "NEW" %}selected{% endif %}
+                >
+                    NEW
+                </option>
+
+                <option
+                    value="QUOTING"
+                    {% if rfq["status"] == "QUOTING" %}selected{% endif %}
+                >
+                    QUOTING
+                </option>
+
+                <option
+                    value="QUOTED"
+                    {% if rfq["status"] == "QUOTED" %}selected{% endif %}
+                >
+                    QUOTED
+                </option>
+
+                <option
+                    value="WON"
+                    {% if rfq["status"] == "WON" %}selected{% endif %}
+                >
+                    WON
+                </option>
+
+                <option
+                    value="LOST"
+                    {% if rfq["status"] == "LOST" %}selected{% endif %}
+                >
+                    LOST
+                </option>
+
+            </select>
+
+        </form>
+
+    </div>
+
+
+    <section class="rfq-details">
+
+        <div class="detail-card">
+
+            <h3>Company</h3>
+
+            <p>
+                {{ rfq["company"] }}
+            </p>
+
+        </div>
+
+
+        <div class="detail-card">
+
+            <h3>Email</h3>
+
+            {% if rfq["email"] %}
 
                 <p>
-                    {{ rfq["company"] }}
+
+                    <a href="mailto:{{ rfq['email'] }}">
+                        {{ rfq["email"] }}
+                    </a>
+
                 </p>
 
-            </div>
+            {% else %}
 
-            <div class="detail-card">
-                <h3>Email</h3>
+                <p>Not provided</p>
 
-                {% if rfq["email"] %}
-                    <p>
-                        <a href="mailto:{{ rfq['email'] }}">
-                            {{ rfq["email"] }}
-                        </a>
-                    </p>
-                {% else %}
-                    <p>Not provided</p>
-                {% endif %}
-            </div>
+            {% endif %}
 
-            <div class="detail-card">
-
-                <h3>Product</h3>
-
-                <p>
-                    {{ rfq["product"] }}
-                </p>
-
-            </div>
+        </div>
 
 
-            <div class="detail-card">
+        <div class="detail-card">
 
-                <h3>Quantity</h3>
+            <h3>Product</h3>
 
-                <p>
-                    {{ rfq["quantity"] }}
-                </p>
+            <p>
+                {{ rfq["product"] }}
+            </p>
 
-            </div>
-
-
-            <div class="detail-card">
-
-                <h3>Delivery Date</h3>
-
-                <p>
-                    {{ rfq["delivery_date"] }}
-                </p>
-
-            </div>
+        </div>
 
 
-            <div class="detail-card">
+        <div class="detail-card">
 
-                <h3>Delivery Location</h3>
+            <h3>Quantity</h3>
 
-                <p>
-                    {{ rfq["delivery_location"] }}
-                </p>
+            <p>
+                {{ rfq["quantity"] }}
+            </p>
 
-            </div>
+        </div>
 
 
-            <div class="detail-card requirements-card">
+        <div class="detail-card">
 
-                <h3>Requirements</h3>
+            <h3>Delivery Date</h3>
 
-                <ul class="requirements-list">
+            <p>
+                {{ rfq["delivery_date"] }}
+            </p>
 
-                    {% for requirement in rfq["requirements"].split(", ") %}
+        </div>
+
+
+        <div class="detail-card">
+
+            <h3>Delivery Location</h3>
+
+            <p>
+                {{ rfq["delivery_location"] }}
+            </p>
+
+        </div>
+
+
+        <div class="detail-card requirements-card">
+
+            <h3>Requirements</h3>
+
+            <ul class="requirements-list">
+
+                {% for requirement in rfq["requirements"].split(", ") %}
 
                     <li>
                         {{ requirement }}
                     </li>
 
-                    {% endfor %}
+                {% endfor %}
 
-                </ul>
+            </ul>
 
-            </div>
+        </div>
 
-        </section>
-        <section class="quote-section">
+    </section>
 
-            <div class="quote-header">
-                <div>
-                    <h2>Quote</h2>
-                    <p>Pricing for this RFQ</p>
-                </div>
 
-                {% if rfq["unit_price"] is not none %}
-                    <span class="quote-status">QUOTED</span>
-                {% endif %}
+    <section class="quote-section">
+
+        <div class="quote-header">
+
+            <div>
+
+                <h2>Quote</h2>
+
+                <p>Pricing for this RFQ</p>
+
             </div>
 
 
             {% if rfq["unit_price"] is not none %}
 
-                <div class="quote-pricing">
+                <span class="quote-status">
+                    QUOTED
+                </span>
 
-                    <div class="price-item">
-                        <span>Unit Price</span>
-                        <strong>£{{ "%.2f"|format(rfq["unit_price"]) }}</strong>
-                    </div>
+            {% endif %}
 
-                    <div class="price-item total">
-                        <span>Total Price</span>
-                        <strong>£{{ "%.2f"|format(rfq["total_price"]) }}</strong>
-                    </div>
+        </div>
+
+
+        {% if rfq["unit_price"] is not none %}
+
+            <div class="quote-pricing">
+
+                <div class="price-item">
+
+                    <span>Unit Price</span>
+
+                    <strong>
+                        £{{ "%.2f"|format(rfq["unit_price"]) }}
+                    </strong>
 
                 </div>
 
 
-                <a
-                    href="/rfq/{{ rfq['id'] }}/quote/pdf"
-                    class="download-button"
+                <div class="price-item total">
+
+                    <span>Total Price</span>
+
+                    <strong>
+                        £{{ "%.2f"|format(rfq["total_price"]) }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <a
+                href="/rfq/{{ rfq['id'] }}/quote/pdf"
+                class="download-button"
+            >
+                Download Quote PDF
+            </a>
+
+
+            <form
+                action="/rfq/{{ rfq['id'] }}/email"
+                method="post"
+            >
+
+                <button
+                    type="submit"
+                    class="email-button email-generate"
                 >
-                    Download Quote PDF
-                </a>
+                    Generate Customer Email
+                </button>
+
+            </form>
 
 
-            {% else %}
+        {% else %}
+
+            <form
+                action="/rfq/{{ rfq['id'] }}/quote"
+                method="post"
+                class="quote-form"
+            >
+
+                <label for="unit_price">
+                    Unit Price (£)
+                </label>
+
+                <input
+                    type="number"
+                    id="unit_price"
+                    name="unit_price"
+                    step="0.01"
+                    min="0"
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="upload-button"
+                >
+                    Create Quote
+                </button>
+
+            </form>
+
+        {% endif %}
+
+    </section>
+
+
+    {% if generated_email or rfq['email_draft'] %}
+
+        <section class="quote-section">
+
+            <div class="quote-header">
+
+                <div>
+
+                    <h2>Customer Email</h2>
+
+                    <p>
+                        AI-generated response draft
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="email-draft">
 
                 <form
-                    action="/rfq/{{ rfq['id'] }}/quote"
+                    action="/rfq/{{ rfq['id'] }}/email/save"
                     method="post"
-                    class="quote-form"
                 >
 
-                    <label for="unit_price">
-                        Unit Price (£)
-                    </label>
+                    <textarea
+                        name="email_draft"
+                        rows="15"
+                        style="width: 100%; box-sizing: border-box; padding: 12px;"
+                    >{{ generated_email or rfq['email_draft'] or '' }}</textarea>
 
-                    <input
-                        type="number"
-                        id="unit_price"
-                        name="unit_price"
-                        step="0.01"
-                        min="0"
-                        required
-                    >
 
-                    <button type="submit" class="upload-button">
-                        Create Quote
-                    </button>
+                    <div class="email-actions">
+
+                        <button
+                            type="submit"
+                            class="email-button email-save"
+                        >
+                            Save Draft
+                        </button>
+
+                    </div>
 
                 </form>
 
-            {% endif %}
+
+                {% if rfq['email'] %}
+
+                    <form
+                        action="/rfq/{{ rfq['id'] }}/email/send"
+                        method="post"
+                    >
+
+                        <button
+                            type="submit"
+                            class="email-button email-send"
+                        >
+                            Send Email
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
+            </div>
 
         </section>
 
-        <a href="/" class="back-button">
-            ← Back to Dashboard
-        </a>
+    {% endif %}
 
-        <form
-            action="/rfq/{{ rfq['id'] }}/delete"
-            method="post"
-            onsubmit="return confirm('Are you sure you want to delete this RFQ?');"
+
+    <form
+        action="/rfq/{{ rfq['id'] }}/delete"
+        method="post"
+        onsubmit="return confirm('Are you sure you want to delete this RFQ?');"
+    >
+
+        <button
+            type="submit"
+            class="delete-button"
         >
-            <button type="submit" class="delete-button">
-                Delete RFQ
-            </button>
-        </form>
+            Delete RFQ
+        </button>
 
-    </main>
+    </form>
+
+</main>
+```
 
 </body>
 
 </html>
-```
