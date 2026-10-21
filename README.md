@@ -34,6 +34,16 @@ The application extracts structured information from RFQ documents, stores the d
 - ReportLab
 - Git / GitHub
 
+Admin Login
+
+The application includes a password-protected admin dashboard for managing RFQs, generating quotations, and reviewing customer email drafts.
+
+Demo Login Credentials
+
+Username: admin123
+
+Password: password
+
 ## How It Works
 
 ```text
