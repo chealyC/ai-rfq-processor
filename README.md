@@ -40,9 +40,9 @@ The application includes a password-protected admin dashboard for managing RFQs,
 
 Demo Login Credentials
 
-Username: admin123
+Username: admin
 
-Password: password
+Password: password123
 
 ## How It Works
 
